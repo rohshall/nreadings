@@ -1,0 +1,8 @@
+{ 
+  "name": "nreadings"
+, "version": "0.0.1"
+, "dependencies": {
+    "restify": "2.5.1"
+  , "pg": "1.1.2"
+  }
+}
