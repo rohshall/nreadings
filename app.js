@@ -13,49 +13,45 @@ server.use(restify.bodyParser());
 
 server.get('/api/1/devices', function (req, res, next) {
   var client = new pg.Client(conString);
-  client.connect();
-  var query = client.query("SELECT * FROM devices");
-  var data = [];
-  query.on('row', function(row) {
-    data.push({ 
-      device_type_id: row.device_type_id,
-      mac_addr: row.mac_addr
+  client.connect(function(err) {
+    client.query("SELECT * FROM devices", function(err, result) {
+      client.end();
+      console.log(result);
+      console.log(err);
+      var data = result.rows.map(function(row) {
+        return({device_type_id: row.device_type_id, mac_addr: row.mac_addr});
+      });
+      res.json(data);
+      return next();
     });
-  });
-  query.on('end', function() {
-    client.end();
-    res.json(data);
-    return next();
   });
 });
 
 server.get('/api/1/devices/:device_id', function (req, res, next) {
   var client = new pg.Client(conString);
-  client.connect();
-  var query = client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.params.device_id]);
-  query.on('row', function(row) {
-    res.send({ 
-      device_type_id: row.device_type_id,
-      mac_addr: row.mac_addr
+  client.connect(function(err) {
+    client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.params.device_id], function(err, result) {
+      client.end();
+      console.log(result);
+      console.log(err);
+      var row = result.rows[0];
+      res.send({device_type_id: row.device_type_id, mac_addr: row.mac_addr});
+      return next();
     });
-  });
-  query.on('end', function(result) {
-    console.log(result.rows.length + ' rows processed');
-    client.end();
-    return next();
   });
 });
 
 server.post('/api/1/devices', function (req, res, next) {
   var client = new pg.Client(conString);
-  client.connect();
-  var today = new Date();
-  var query = client.query("INSERT INTO DEVICES (mac_addr, device_type_id, manufactured_at) VALUES ($1, $2, $3)",
-    [req.params.mac_addr, req.params.device_type_id, '' + today.toISOString()]);
-  query.on('end', function(result) {
-    console.log(result.rows.length + ' rows processed');
-    client.end();
-    return next();
+  client.connect(function(err) {
+    var today = new Date();
+    client.query("INSERT INTO DEVICES (mac_addr, device_type_id, manufactured_at) VALUES ($1, $2, $3)",
+      [req.params.mac_addr, req.params.device_type_id, '' + today.toISOString()], function(err, result) {
+        client.end();
+        console.log(result);
+        console.log(err);
+        return next();
+      });
   });
 });
 
