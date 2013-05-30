@@ -12,13 +12,13 @@ var pg = require('pg');
 
 var conString = ["tcp://", db_username, ":", db_password, "@", host_url, "/", db_name].join("");
 
-var server = express();
+var server = express.createServer();
 server.configure(function() {
   server.use(express.bodyParser());
 });
 
 server.get('/api/1/devices', function (req, res) {
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
       res.json(501, err);
@@ -33,19 +33,18 @@ server.get('/api/1/devices', function (req, res) {
           });
           res.json(data);
         }
-        done();
       });
     }
   });
 });
 
 server.get('/api/1/devices/:device_id', function (req, res) {
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
       res.json(501, err);
     } else {
-      client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.params.device_id], function(err, result) {
+      client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.body.device_id], function(err, result) {
         if (err) {
           console.log(err);
           res.json(501, err);
@@ -53,40 +52,38 @@ server.get('/api/1/devices/:device_id', function (req, res) {
           var row = result.rows[0];
           res.json({device_type_id: row.device_type_id, mac_addr: row.mac_addr});
         }
-        done();
       });
     }
   });
 });
 
 server.post('/api/1/devices', function (req, res) {
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
       res.json(501, err);
     } else {
       var today = new Date();
       client.query("INSERT INTO DEVICES (mac_addr, device_type_id, manufactured_at) VALUES ($1, $2, $3)",
-        [req.params.mac_addr, req.params.device_type_id, today.toISOString()], function(err, result) {
+        [req.body.mac_addr, req.body.device_type_id, today.toISOString()], function(err, result) {
           if (err) {
             console.log(err);
             res.json(501, err);
           } else {
             res.json({status: "ok"});
           }
-          done();
       });
     }
   });
 });
 
 server.get('/api/1/devices/:device_id/readings', function (req, res) {
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
       res.json(501, err);
     } else {
-      client.query("SELECT * FROM readings WHERE device_mac_addr = $1", [req.params.device_id], function(err, result) {
+      client.query("SELECT * FROM readings WHERE device_mac_addr = $1", [req.body.device_id], function(err, result) {
         if (err) {
           console.log(err);
           res.json(501, err);
@@ -96,28 +93,26 @@ server.get('/api/1/devices/:device_id/readings', function (req, res) {
           });
           res.json(data);
         }
-        done();
       });
     }
   });
 });
 
 server.post('/api/1/devices/:device_id/readings', function (req, res) {
-  pg.connect(conString, function(err, client, done) {
+  pg.connect(conString, function(err, client) {
     if (err) {
       console.log(err);
       res.json(501, err);
     } else {
       var today = new Date();
       client.query("INSERT INTO readings (value, created_at) VALUES ($1, $2)",
-        [req.params.value, today.toISOString()], function(err, result) {
+        [req.body.value, today.toISOString()], function(err, result) {
         if (err) {
           console.log(err);
           res.json(501, err);
         } else {
           res.json({status: "ok"});
         }
-        done();
       });
     }
   });
