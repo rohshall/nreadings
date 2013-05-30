@@ -49,8 +49,12 @@ server.get('/api/1/devices/:device_id', function (req, res) {
           console.log(err);
           res.json(501, err);
         } else {
-          var row = result.rows[0];
-          res.json({device_type_id: row.device_type_id, mac_addr: row.mac_addr});
+          if (result.rows.length == 1) {
+            var row = result.rows[0];
+            res.json({device_type_id: row.device_type_id, mac_addr: row.mac_addr});
+          } else {
+            res.json(501, {status: "no such device"});
+          }
         }
       });
     }
