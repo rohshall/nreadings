@@ -1,17 +1,23 @@
-var restify = require('restify');
+#!/bin/env node
+
+var app_name = process.env.OPENSHIFT_APP_NAME || 'nreadings',
+    host_port = process.env.OPENSHIFT_INTERNAL_PORT || 8080,
+    host_url = process.env.OPENSHIFT_INTERNAL_IP  || '127.0.0.1',
+    db_name = process.env.OPENSHIFT_APP_NAME || 'sd_ventures_development',
+    db_username = process.env.OPENSHIFT_POSTGRESQL_DB_USERNAME || 'sd_ventures',
+    db_password = process.env.OPENSHIFT_POSTGRESQL_DB_PASSWORD || ''
+
+var express = require('express');
 var pg = require('pg');
 
-var conString = "tcp://sd_ventures:@localhost/sd_ventures_development";
+var conString = ["tcp://", db_username, ":", db_password, "@", host_url, "/", db_name].join("");
 
-var server = restify.createServer({
-  name: 'nreadings',
-  version: '0.0.1'
+var server = express();
+server.configure(function() {
+  server.use(express.bodyParser());
 });
-server.use(restify.acceptParser(server.acceptable));
-server.use(restify.queryParser());
-server.use(restify.bodyParser());
 
-server.get('/api/1/devices', function (req, res, next) {
+server.get('/api/1/devices', function (req, res) {
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
@@ -30,11 +36,10 @@ server.get('/api/1/devices', function (req, res, next) {
         done();
       });
     }
-    return next();
   });
 });
 
-server.get('/api/1/devices/:device_id', function (req, res, next) {
+server.get('/api/1/devices/:device_id', function (req, res) {
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
@@ -51,11 +56,10 @@ server.get('/api/1/devices/:device_id', function (req, res, next) {
         done();
       });
     }
-    return next();
   });
 });
 
-server.post('/api/1/devices', function (req, res, next) {
+server.post('/api/1/devices', function (req, res) {
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
@@ -73,11 +77,10 @@ server.post('/api/1/devices', function (req, res, next) {
           done();
       });
     }
-    return next();
   });
 });
 
-server.get('/api/1/devices/:device_id/readings', function (req, res, next) {
+server.get('/api/1/devices/:device_id/readings', function (req, res) {
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
@@ -96,11 +99,10 @@ server.get('/api/1/devices/:device_id/readings', function (req, res, next) {
         done();
       });
     }
-    return next();
   });
 });
 
-server.post('/api/1/devices/:device_id/readings', function (req, res, next) {
+server.post('/api/1/devices/:device_id/readings', function (req, res) {
   pg.connect(conString, function(err, client, done) {
     if (err) {
       console.log(err);
@@ -118,10 +120,9 @@ server.post('/api/1/devices/:device_id/readings', function (req, res, next) {
         done();
       });
     }
-    return next();
   });
 });
 
-server.listen(8080, function () {
+server.listen(host_port, host_url, function () {
   console.log('%s listening at %s', server.name, server.url);
 });
