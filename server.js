@@ -110,7 +110,7 @@ server.post('/api/1/devices/:device_id/readings', function (req, res) {
           res.json(501, err);
         } else {
           // if the device exists, add this reading
-          if (result.rowCount == 1) {
+          if (result.rows.length == 1) {
             var today = new Date();
             client.query("INSERT INTO readings (value, created_at, device_mac_addr) VALUES ($1, $2, $3)",
               [req.body.value, today.toISOString(), req.params.device_id], function(err, result) {
