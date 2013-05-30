@@ -44,7 +44,7 @@ server.get('/api/1/devices/:device_id', function (req, res) {
       console.log(err);
       res.json(501, err);
     } else {
-      client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.body.device_id], function(err, result) {
+      client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.params.device_id], function(err, result) {
         if (err) {
           console.log(err);
           res.json(501, err);
@@ -83,7 +83,7 @@ server.get('/api/1/devices/:device_id/readings', function (req, res) {
       console.log(err);
       res.json(501, err);
     } else {
-      client.query("SELECT * FROM readings WHERE device_mac_addr = $1", [req.body.device_id], function(err, result) {
+      client.query("SELECT * FROM readings WHERE device_mac_addr = $1", [req.params.device_id], function(err, result) {
         if (err) {
           console.log(err);
           res.json(501, err);
@@ -104,14 +104,26 @@ server.post('/api/1/devices/:device_id/readings', function (req, res) {
       console.log(err);
       res.json(501, err);
     } else {
-      var today = new Date();
-      client.query("INSERT INTO readings (value, created_at) VALUES ($1, $2)",
-        [req.body.value, today.toISOString()], function(err, result) {
+      client.query("SELECT * FROM devices WHERE mac_addr = $1", [req.params.device_id], function(err, result) {
         if (err) {
           console.log(err);
           res.json(501, err);
         } else {
-          res.json({status: "ok"});
+          // if the device exists, add this reading
+          if (result.rowCount == 1) {
+            var today = new Date();
+            client.query("INSERT INTO readings (value, created_at, device_mac_addr) VALUES ($1, $2, $3)",
+              [req.body.value, today.toISOString(), req.params.device_id], function(err, result) {
+              if (err) {
+                console.log(err);
+                res.json(501, err);
+              } else {
+                res.json({status: "ok"});
+              }
+            });
+          } else {
+            res.json(501, {status: "no such device"});
+          }
         }
       });
     }
